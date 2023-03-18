@@ -1,0 +1,29 @@
+{
+  "name": "backend01",
+  "version": "1.0.0",
+  "description": "pos graduacao unyleya",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node ./index.js",
+    "dev": "nodemon ./index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/LucasRocha179/backend01.git"
+  },
+  "author": "Lucas",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/LucasRocha179/backend01/issues"
+  },
+  "homepage": "https://github.com/LucasRocha179/backend01#readme",
+  "dependencies": {
+    "express": "^4.18.2",
+    "mongoose": "^7.0.2",
+    "request": "^2.88.2"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.21"
+  }
+}
