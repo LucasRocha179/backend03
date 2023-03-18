@@ -1,5 +1,4 @@
-const UserMongo = require("../model/usuario");
-
+const userService = require("../services/usuario.service");
 class Usuario {
   constructor(nome, nascimento, email, senha, isAdmin = true) {
     this.nome = this.validarNome(nome);
@@ -70,8 +69,14 @@ class Usuario {
 }
 
 const findAll = async (req, res) => {
-  console.log("requested findAllUsers");
-  return res.status(200).send(await UserMongo.find());
+  console.log("LOG: requested findAllUsers");
+  try {
+    return res.status(200).send(await userService.findAllUser());
+  } catch (err) {
+    return res
+      .status(500)
+      .send("Erro no servidor, tente novamente mais tarde!");
+  }
 };
 
 const find = async (req, res) => {
@@ -80,12 +85,12 @@ const find = async (req, res) => {
     if (id == null) {
       return res.send({ message: "parametro vazio!" });
     }
-    console.log(`requested findUser ${req.params.id}`);
-    const usuario = await UserMongo.findById(id);
+    console.log(`LOG: requested findUser ${req.params.id}`);
+    const usuario = await userService.findUser(id);
     if (usuario == null) {
       return res.status(404).send("Usuário não encontrado!");
     }
-    return res.status(200).send(await UserMongo.findById(id));
+    return res.status(200).send(usuario);
   } catch (err) {
     return res
       .status(500)
@@ -106,7 +111,7 @@ const create = async (req, res) => {
       user.senha
     );
     console.log(`LOG: ${usuario.datacadastro} novo usuário ${usuario.userID}`);
-    res.status(201).send(await UserMongo.create(usuario));
+    res.status(201).send(await userService.createUser(usuario));
   } catch (e) {
     return res.status(400).send({ message: e.message });
   }
@@ -120,34 +125,57 @@ const update = async (req, res) => {
   const user = req.body;
 
   try {
-    const usuario = new Usuario(
-      user.nome,
-      user.nascimento,
-      user.email,
-      user.senha
-    );
-    res.status(201).send(
-      await UserMongo.findByIdAndUpdate(id, usuario, {
-        returnDocument: "after",
-      })
-    );
-    console.log(`LOG: ${usuario.nome} editado!`);
-  } catch (e) {
-    return res.status(400).send({ message: e.message });
+    const usuario = await userService.findUser(id);
+    if (usuario == null) {
+      return res.status(500).send(`O usuário ${id} não existe na base!`);
+    }
+
+    try {
+      const usuarioEdit = new Usuario(
+        user.nome,
+        user.nascimento,
+        user.email,
+        user.senha
+      );
+      res.status(201).send(
+        await userService.updateUser(id, usuarioEdit).then(() => {
+          console.log(`LOG: ${usuarioEdit.nome} editado!`);
+        })
+      );
+    } catch (e) {
+      return res.status(400).send({ message: e.message });
+    }
+  } catch (err) {
+    return res
+      .status(500)
+      .send("Erro no servidor, tente novamente mais tarde!");
   }
 };
 
 const deleteUser = async (req, res) => {
-  try{
-      if (req.params.id == null) {
+  try {
+    if (req.params.id == null) {
       return res.send({ message: "parametro vazio!" });
     }
     const id = req.params.id;
 
-    console.log(`LOG: Usuário ${id} excluído!`);
-    return res
-      .status(200)
-      .send(await UserMongo.findByIdAndRemove(id, { returnDocument: "after" }));
+    const usuario = await userService.findUser(id);
+    if (usuario == null) {
+      return res.status(500).send(`O usuário ${id} não existe na base!`);
+    }
+
+    return res.status(200).send(
+      await userService
+        .deleteUser(id)
+        .then(() => {
+          console.log(`LOG: Usuário ${id} excluído!`);
+        })
+        .catch(() => {
+          console.log(
+            `Erro ao excluir o usuário ${id}, tente novamente mais tarde!`
+          );
+        })
+    );
   } catch (err) {
     return res
       .status(500)
