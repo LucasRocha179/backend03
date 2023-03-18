@@ -1,4 +1,5 @@
 const userService = require("../services/usuario.service");
+const authService = require("../services/auth.service");
 class Usuario {
   constructor(nome, nascimento, email, senha, isAdmin = true) {
     this.nome = this.validarNome(nome);
@@ -8,6 +9,7 @@ class Usuario {
     this.senha = this.validarSenha(senha);
     this.datacadastro = this.getData();
     this.isAdmin = isAdmin;
+    this.token = "undefined";
   }
 
   validarNome(nome) {
@@ -101,6 +103,10 @@ const find = async (req, res) => {
 const create = async (req, res) => {
   if (req.body.nome == null) {
     return res.send({ message: "request body vazio!" });
+  }
+  const test = await authService.loginService(req.body.email);
+  if(test){
+    return res.status(400).send({ message: "Email já cadastrado!" });
   }
   try {
     const user = req.body;
